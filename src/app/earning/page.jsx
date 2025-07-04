@@ -10,15 +10,20 @@ import { FaCheckCircle, FaCrown, FaUndo } from 'react-icons/fa';
 
 const Page = () => {
   const [refunds, setRefunds] = useState({ amount: 0, count: 0 });
-  const [bestSeller, setBestSeller] = useState({ name: 'N/A', unitsSold: 0 });
+  const [bestSeller, setBestSeller] = useState({ name: 'N/A', unitsSold: 0, image: '' });
   const [completedOrders, setCompletedOrders] = useState(0);
+  const [returnsSummary, setReturnsSummary] = useState({ totalReturns: 0, totalAmount: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      const token =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmRiMjhkZjM4ZmZiNjA3YWFkNDcwOCIsImlhdCI6MTc0OTM4NDA3MiwiZXhwIjoxNzUxOTc2MDcyfQ.i3gwhJWDJakeuWXspcVd9POGwU8xnhUmh41_C5oRYyk';
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authorization token not found.');
+        setLoading(false);
+        return;
+      }
 
       const headers = {
         'Content-Type': 'application/json',
@@ -26,65 +31,42 @@ const Page = () => {
       };
 
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://y-balash.vercel.app';
 
         // Refunds
-        const refundsRes = await fetch(`${baseUrl}/api/seller/refunds/monthly`, {
-          method: 'GET',
-          headers,
-        });
-
-        if (!refundsRes.ok) {
-          throw new Error(`Refunds API failed: ${refundsRes.status} ${refundsRes.statusText}`);
-        }
-
+        const refundsRes = await fetch(`${baseUrl}/api/seller/refunds/monthly`, { headers });
         const refundsData = await refundsRes.json();
-        console.log('Refunds Data:', refundsData);
-
         setRefunds({
           amount: Number(refundsData.amount ?? refundsData.data?.amount ?? 0),
           count: Number(refundsData.count ?? refundsData.data?.count ?? 0),
         });
 
         // Best Seller
-        const bestSellerRes = await fetch(`${baseUrl}/api/seller/analytics/best-seller`, {
-          method: 'GET',
-          headers,
-        });
-
-        if (!bestSellerRes.ok) {
-          throw new Error(`Best Seller API failed: ${bestSellerRes.status} ${bestSellerRes.statusText}`);
-        }
-
+        const bestSellerRes = await fetch(`${baseUrl}/api/seller/analytics/best-seller`, { headers });
         const bestSellerData = await bestSellerRes.json();
-        console.log('Best Seller Data:', bestSellerData);
-
         setBestSeller({
-          name: bestSellerData.name ?? bestSellerData.data?.name ?? 'N/A',
-          unitsSold: Number(bestSellerData.unitsSold ?? bestSellerData.data?.unitsSold ?? 0),
+          name: bestSellerData.itemName ?? bestSellerData.bestSeller?.itemName ?? 'N/A',
+          unitsSold: Number(bestSellerData.totalUnits ?? bestSellerData.bestSeller?.totalUnits ?? 0),
+          image: bestSellerData.itemImage ?? bestSellerData.bestSeller?.itemImage ?? '',
         });
 
         // Completed Orders
-        const completedOrdersRes = await fetch(`${baseUrl}/api/seller/orders/completed-this-month`, {
-          method: 'GET',
-          headers,
-        });
-
-        if (!completedOrdersRes.ok) {
-          throw new Error(`Completed Orders API failed: ${completedOrdersRes.status} ${completedOrdersRes.statusText}`);
-        }
-
+        const completedOrdersRes = await fetch(`${baseUrl}/api/seller/orders/completed-this-month`, { headers });
         const completedOrdersData = await completedOrdersRes.json();
-        console.log('Completed Orders Data:', completedOrdersData);
+        setCompletedOrders(Number(completedOrdersData.count ?? completedOrdersData.data?.count ?? 0));
 
-        setCompletedOrders(
-          Number(completedOrdersData.count ?? completedOrdersData.data?.count ?? 0)
-        );
+        // Returns Summary
+        const returnsRes = await fetch(`${baseUrl}/api/seller/returns/summary`, { headers });
+        const returnsData = await returnsRes.json();
+        setReturnsSummary({
+          totalReturns: Number(returnsData.summary?.totalReturns ?? 0),
+          totalAmount: Number(returnsData.summary?.totalAmount ?? 0),
+        });
 
         setLoading(false);
       } catch (err) {
         console.error('Fetch Error:', err);
-        setError(err.message);
+        setError(err.message || 'Unexpected error');
         setLoading(false);
       }
     };
@@ -111,9 +93,7 @@ const Page = () => {
             <p className="text-xl text-[#FFCD29] font-bold">EGP {refunds.amount}</p>
             <p className="text-sm text-[#6B7280]">{refunds.count} refunds this month</p>
           </div>
-          <div>
-            <FaUndo className="text-[#EF4444]" size={24} />
-          </div>
+          <FaUndo className="text-[#EF4444]" size={24} />
         </div>
 
         {/* Best Seller */}
@@ -134,6 +114,16 @@ const Page = () => {
             <p className="text-sm text-[#6B7280]">This month</p>
           </div>
           <FaCheckCircle className="text-[#10B981]" size={24} />
+        </div>
+
+        {/* Returns Summary */}
+        <div className="bg-white p-6 rounded-lg flex items-start justify-between w-[370px] mt-2 mb-2">
+          <div className="flex flex-col gap-2 items-start">
+            <p className="text-md text-Main font-bold">Returns</p>
+            <p className="text-xl text-red-500 font-bold">EGP {returnsSummary.totalAmount}</p>
+            <p className="text-sm text-[#6B7280]">{returnsSummary.totalReturns} returns total</p>
+          </div>
+          <FaUndo className="text-red-400" size={24} />
         </div>
       </div>
     </div>

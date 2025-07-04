@@ -187,9 +187,6 @@ ChartJS.register(
   Filler
 );
 
-const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmRiMjhkZjM4ZmZiNjA3YWFkNDcwOCIsImlhdCI6MTc0ODEyMzYxOCwiZXhwIjoxNzUwNzE1NjE4fQ.lZ1_nBuc-rxi3lPAx55iDr9kq-3Pj8m0BlJctjuMmlo";
-
 const SalesAnalytics = () => {
   const [timeFrame, setTimeFrame] = useState("Weekly");
   const [chartData, setChartData] = useState(null);
@@ -199,6 +196,14 @@ const SalesAnalytics = () => {
   const fetchData = async (period) => {
     try {
       setLoading(true);
+
+      // ✅ Get token dynamically from localStorage
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+      if (!token) {
+        throw new Error("Token not found. Please login.");
+      }
+
       const response = await fetch(
         `https://y-balash.vercel.app/api/seller/sales-analytics?period=${period.toLowerCase()}`,
         {

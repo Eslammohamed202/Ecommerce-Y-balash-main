@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import {   FiDollarSign } from 'react-icons/fi';
 import { MdOutlineSecurity } from "react-icons/md";

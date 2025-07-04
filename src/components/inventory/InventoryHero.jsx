@@ -14,71 +14,45 @@ const InventoryHero = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmRiMjhkZjM4ZmZiNjA3YWFkNDcwOCIsImlhdCI6MTc0OTM4NDA3MiwiZXhwIjoxNzUxOTc2MDcyfQ.i3gwhJWDJakeuWXspcVd9POGwU8xnhUmh41_C5oRYyk';
-
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      };
-
       try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+        if (!token) throw new Error("Token not found in localStorage");
+
+        const headers = {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        };
+
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://y-balash.vercel.app';
 
-        // Fetch Stock Stats
-        const stockStatsRes = await fetch(`${baseUrl}/api/seller/stock-stats`, {
+        // 1. ✅ Fetch Total Products
+        const productStatsRes = await fetch(`${baseUrl}/api/seller/products-stats`, {
           method: 'GET',
           headers,
         });
+        const productStatsData = await productStatsRes.json();
+        const totalProductsValue = productStatsData?.stats?.totalProducts ?? 0;
+        setTotalProducts(totalProductsValue);
 
-        if (!stockStatsRes.ok) {
-          throw new Error(`Stock Stats API failed: ${stockStatsRes.status} ${stockStatsRes.statusText}`);
-        }
-
-        const stockStatsData = await stockStatsRes.json();
-        console.log('Stock Stats Data:', stockStatsData);
-
-        const outOfStockValue = Number(
-          stockStatsData.outOfStock ??
-          stockStatsData.out_of_stock ??
-          stockStatsData.data?.outOfStock ??
-          stockStatsData.data?.out_of_stock ??
-          0
-        );
-
-        const lowStockValue = Number(
-          stockStatsData.lowStock ??
-          stockStatsData.low_stock ??
-          stockStatsData.data?.lowStock ??
-          stockStatsData.data?.low_stock ??
-          0
-        );
-
-        setOutOfStock(isNaN(outOfStockValue) ? 0 : outOfStockValue);
-        setLowStock(isNaN(lowStockValue) ? 0 : lowStockValue);
-
-        // Fetch Products Stats
-        const productsStatsRes = await fetch(`${baseUrl}/api/seller/products-stats`, {
+        // 2. ✅ Fetch Out Of Stock
+        const outOfStockRes = await fetch(`${baseUrl}/api/out-of-stock-items`, {
           method: 'GET',
           headers,
         });
+        const outOfStockData = await outOfStockRes.json();
+        const outOfStockCount = outOfStockData?.count ?? 0;
+        setOutOfStock(outOfStockCount);
 
-        if (!productsStatsRes.ok) {
-          throw new Error(`Products Stats API failed: ${productsStatsRes.status} ${productsStatsRes.statusText}`);
-        }
+        // 3. ✅ Fetch Low Stock Count
+        const lowStockRes = await fetch(`${baseUrl}/api/seller/low-stock-count`, {
+          method: 'GET',
+          headers,
+        });
+        const lowStockData = await lowStockRes.json();
+        const lowStockCount = lowStockData?.lowStockItemsCount ?? 0;
+        setLowStock(lowStockCount);
 
-        const productsStatsData = await productsStatsRes.json();
-        console.log('Products Stats Data:', productsStatsData);
-
-        const totalProductsValue = Number(
-          productsStatsData.totalProducts ??
-          productsStatsData.total_products ??
-          productsStatsData.data?.totalProducts ??
-          productsStatsData.data?.total_products ??
-          0
-        );
-
-        setTotalProducts(isNaN(totalProductsValue) ? 0 : totalProductsValue);
         setLoading(false);
       } catch (err) {
         console.error('Fetch Error:', err);

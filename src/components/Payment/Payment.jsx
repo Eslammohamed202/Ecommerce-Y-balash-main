@@ -65,7 +65,7 @@ export default function Payment() {
         console.log("Sending payment with amount:", amount);
 
         const { data } = await axios.post(
-          "https://y-balash.vercel.app/api/purchases/payment",
+          "https://y-balash.onrender.com/api/purchases/payment",
           { amount },
           {
             headers: {

@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar/Navbar'
-import Form from '@/components/Withdraw/Form'
+import Form from '@/components/Withdraw/WithdrawForm'
 import Security from '@/components/Withdraw/Security'
 import TransactionHistory from '@/components/Withdraw/TransactionHistory'
 import WithdrawHeader from '@/components/Withdraw/WithdrawHeader'

@@ -2,38 +2,36 @@
 
 import React, { useState, useEffect } from 'react';
 
-const TOKEN = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmRiMjhkZjM4ZmZiNjA3YWFkNDcwOCIsImlhdCI6MTc0OTM4NDA3MiwiZXhwIjoxNzUxOTc2MDcyfQ.i3gwhJWDJakeuWXspcVd9POGwU8xnhUmh41_C5oRYyk'; // تأكد أنه سليم وكامل
-
 const RecentPayouts = () => {
   const [payouts, setPayouts] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchPayouts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('https://y-balash.vercel.app/api/seller/payouts/recent', {
-          method: 'GET',
-          headers: {
-            Authorization: TOKEN,
-            'Content-Type': 'application/json',
-          },
-        });
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (!token) throw new Error('Token not found in localStorage');
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
-          throw new Error(`Failed to fetch payouts: ${response.status} ${response.statusText}`);
-        }
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        };
 
-        const data = await response.json();
-        console.log('Fetched Payouts:', data);
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://y-balash.vercel.app';
 
-        if (data.message === "Recent payouts retrieved successfully" && Array.isArray(data.payouts)) {
-          setPayouts(data.payouts);
-        } else {
-          setPayouts([]);
-        }
+        // Fetch payouts
+        const payoutsRes = await fetch(`${baseUrl}/api/seller/payouts/recent`, { headers });
+        if (!payoutsRes.ok) throw new Error(`Payouts fetch error: ${payoutsRes.statusText}`);
+        const payoutsData = await payoutsRes.json();
+        setPayouts(payoutsData.payouts || []);
+
+        // Fetch last 7 days orders
+        const ordersRes = await fetch(`${baseUrl}/api/seller/last-7-days-orders`, { headers });
+        if (!ordersRes.ok) throw new Error(`Orders fetch error: ${ordersRes.statusText}`);
+        const ordersData = await ordersRes.json();
+        setOrders(ordersData.orders || []);
 
         setLoading(false);
       } catch (err) {
@@ -43,14 +41,14 @@ const RecentPayouts = () => {
       }
     };
 
-    fetchPayouts();
+    fetchData();
   }, []);
 
   if (loading) {
     return (
       <div className="container mx-auto p-4 bg-white rounded-xl shadow-sm mt-10">
         <h2 className="text-xl font-bold text-Main">Recent Payouts</h2>
-        <div className="p-4 text-gray-500 animate-pulse">Loading payouts...</div>
+        <div className="p-4 text-gray-500 animate-pulse">Loading...</div>
       </div>
     );
   }
@@ -66,8 +64,9 @@ const RecentPayouts = () => {
 
   return (
     <div className="container mx-auto p-4 bg-white rounded-xl shadow-sm mt-10">
+      {/* Payouts Table */}
       <h2 className="text-xl font-bold text-Main mb-4">Recent Payouts</h2>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto mb-10">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b bg-gray-50">
@@ -86,22 +85,49 @@ const RecentPayouts = () => {
                   <td className="py-2 px-4 text-[#374151]">{payout.method || 'Unknown'}</td>
                   <td className="py-2 px-4">
                     {payout.status === 'Paid' ? (
-                      <span className="bg-green-100 text-green-700 py-1 px-3 rounded-full text-sm font-medium">
-                        Paid
-                      </span>
+                      <span className="bg-green-100 text-green-700 py-1 px-3 rounded-full text-sm font-medium">Paid</span>
                     ) : (
-                      <span className="bg-yellow-100 text-yellow-700 py-1 px-3 rounded-full text-sm font-medium">
-                        Pending
-                      </span>
+                      <span className="bg-yellow-100 text-yellow-700 py-1 px-3 rounded-full text-sm font-medium">Pending</span>
                     )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="4" className="py-4 text-center text-[#6B7280]">
-                  No payouts found
-                </td>
+                <td colSpan="4" className="py-4 text-center text-[#6B7280]">No payouts found</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Orders Table */}
+      <h2 className="text-xl font-bold text-Main mb-4">Last 7 Days Orders</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b bg-gray-50">
+              <th className="py-2 px-4 text-[#6B7280]">Date</th>
+              <th className="py-2 px-4 text-[#6B7280]">Amount</th>
+              <th className="py-2 px-4 text-[#6B7280]">Payment Method</th>
+              <th className="py-2 px-4 text-[#6B7280]">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.length > 0 ? (
+              orders.map((order, index) => (
+                <tr key={index} className="border-b hover:bg-gray-50">
+                  <td className="py-2 px-4 text-[#374151]">{order.date || 'N/A'}</td>
+                  <td className="py-2 px-4 text-[#374151]">{order.totalAmount?.toFixed(2) || 0}</td>
+                  <td className="py-2 px-4 text-[#374151]">{order.paymentMethod || 'Unknown'}</td>
+                  <td className="py-2 px-4">
+                    <span className="bg-yellow-100 text-yellow-700 py-1 px-3 rounded-full text-sm font-medium">{order.status}</span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="py-4 text-center text-[#6B7280]">No recent orders found</td>
               </tr>
             )}
           </tbody>

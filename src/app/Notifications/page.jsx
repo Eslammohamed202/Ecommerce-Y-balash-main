@@ -6,7 +6,6 @@ import { AiOutlineWarning } from 'react-icons/ai';
 import NotificationsHeader from '@/components/Notifications/NotificationsHeader';
 import Navbar from '@/components/Navbar/Navbar';
 
-// 🕒 Helper: Format timestamp into "Today", "Yesterday", or Date
 const getDateGroup = (timestamp) => {
   const date = new Date(timestamp);
   if (isNaN(date)) return "Unknown";
@@ -19,7 +18,6 @@ const getDateGroup = (timestamp) => {
   return date.toLocaleDateString();
 };
 
-// 🔔 Helper: Get icon based on notification type
 const getNotificationIcon = (type) => {
   switch (type?.toLowerCase()) {
     case 'order':
@@ -38,29 +36,32 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 🚀 Fetch notifications
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch('https://y-balash.vercel.app/api/seller/notifications', {
-          method: 'GET',
-          headers: {
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmRiMjhkZjM4ZmZiNjA3YWFkNDcwOCIsImlhdCI6MTc0OTM4NDA3MiwiZXhwIjoxNzUxOTc2MDcyfQ.i3gwhJWDJakeuWXspcVd9POGwU8xnhUmh41_C5oRYyk',
-            'Content-Type': 'application/json',
-          },
-        });
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Token not found in localStorage");
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const headers = {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        };
 
-        const data = await response.json();
-        console.log('API Response:', data);
+        const [notifRes, lowStockRes] = await Promise.all([
+          fetch('https://y-balash.vercel.app/api/seller/notifications', { headers }),
+          fetch('https://y-balash.vercel.app/api/seller/low-stock-items', { headers }),
+        ]);
 
-        let notificationsArray = Array.isArray(data) ? data : data.notifications || [];
+        if (!notifRes.ok) throw new Error(`Notif API Error: ${notifRes.status}`);
+        if (!lowStockRes.ok) throw new Error(`Low-stock API Error: ${lowStockRes.status}`);
+
+        const notifData = await notifRes.json();
+        const lowStockData = await lowStockRes.json();
+
+        let notificationsArray = Array.isArray(notifData) ? notifData : notifData.notifications || [];
 
         notificationsArray = notificationsArray.map(notification => ({
-          id: notification._id || notification.id || 'unknown-' + Math.random().toString(36).substr(2, 9),
+          id: notification._id || notification.id || 'notif-' + Math.random().toString(36).substr(2, 9),
           title: notification.title || notification.type || 'Notification',
           message: notification.message || notification.description || 'No details available',
           timestamp: notification.timestamp || notification.createdAt || new Date().toISOString(),
@@ -68,7 +69,18 @@ const Page = () => {
           link: notification.link || (notification.orderId ? `/orders/${notification.orderId}` : '#'),
         }));
 
-        setNotifications(notificationsArray);
+        const lowStockNotifications = (lowStockData.items || []).map(item => ({
+          id: item._id || 'low-' + Math.random().toString(36).substr(2, 9),
+          title: 'Low Stock Alert',
+          message: `${item.name} stock is below threshold (${item.quantity} left).`,
+          timestamp: new Date().toISOString(),
+          type: 'warning',
+          link: `/products/${item._id}`,
+        }));
+
+        const allNotifications = [...notificationsArray, ...lowStockNotifications];
+
+        setNotifications(allNotifications);
         setLoading(false);
       } catch (err) {
         console.error('Fetch Error:', err);
@@ -80,7 +92,6 @@ const Page = () => {
     fetchNotifications();
   }, []);
 
-  // 📅 Group notifications
   const groupedNotifications = notifications.reduce((acc, notification) => {
     const group = getDateGroup(notification.timestamp);
     acc[group] = acc[group] || [];
@@ -88,7 +99,6 @@ const Page = () => {
     return acc;
   }, {});
 
-  // 🧾 UI: Loading
   if (loading) {
     return (
       <div>
@@ -99,7 +109,6 @@ const Page = () => {
     );
   }
 
-  // ❌ UI: Error
   if (error) {
     return (
       <div>
@@ -110,7 +119,6 @@ const Page = () => {
     );
   }
 
-  // ✅ UI: Render
   return (
     <div>
       <Navbar />
@@ -134,7 +142,7 @@ const Page = () => {
                         <p className="text-[18px] font-semibold text-[#111827]">{notification.title}</p>
                         <p className="text-xs text-[#4B5563] mb-2">{notification.message}</p>
                         <a href={notification.link} className="text-[#2563EB] text-sm">
-                          View Order Details →
+                          View Details →
                         </a>
                       </div>
                     </div>

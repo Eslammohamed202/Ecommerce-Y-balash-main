@@ -78,7 +78,7 @@ export default function NavbarHome() {
                 <div className="flex flex-col items-start p-4">
                   <Link href="/client-home">
                     <Image
-                      src="/logoFresh.png"
+                      src="/imageBanner.png"
                       alt="Logo"
                       width={115}
                       height={115}

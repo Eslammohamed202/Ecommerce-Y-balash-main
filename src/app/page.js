@@ -1,7 +1,6 @@
 "use client";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Hero from "@/components/Home/Hero";
 import LastUpdates from "@/components/Home/LastUpdates";
 import QuickAction from "@/components/Home/QuickAction";
@@ -11,54 +10,54 @@ import Navbar from "@/components/Navbar/Navbar";
 import Link from "next/link";
 
 export default function Home() {
-  const { data: session, status } = useSession();
   const router = useRouter();
-  const [username, setUsername] = useState("Seller"); 
+  const [username, setUsername] = useState("Seller");
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  if (status === "loading") return;
-  if (!session) {
-    router.push("/login");
-    return;
-  }
+    const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  const fetchUsername = async () => {
-    const token = session?.user?.token;
-
-    if (!token) {
-      console.error("No access token available");
+    if (!storedToken) {
+      router.push("/login");
       return;
     }
 
-    try {
-      const response = await fetch("https://y-balash.vercel.app/api/user/welcome", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    setToken(storedToken);
+  }, [router]);
 
-      const data = await response.json();
+  useEffect(() => {
+    if (!token) return;
 
-      if (response.ok && typeof data.message === "string") {
-        const match = data.message.match(/Welcome back, (.+?)!/);
-        const extractedName = match?.[1] || "Seller";
-        setUsername(extractedName);
-      } else {
-        console.error("Failed to fetch username:", data.message);
+    const fetchUsername = async () => {
+      try {
+        const response = await fetch("https://y-balash.vercel.app/api/user/welcome", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (response.ok && typeof data.message === "string") {
+          const match = data.message.match(/Welcome back, (.+?)!/);
+          const extractedName = match?.[1] || "Seller";
+          setUsername(extractedName);
+        } else {
+          console.error("Failed to fetch username:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching username:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching username:", error);
-    }
-  };
+    };
 
-  fetchUsername();
-}, [session, status, router]);
+    fetchUsername();
+  }, [token]);
 
-if (status === "loading" || !session) {
-  return null;
-}
-
+  if (loading) return null;
 
   return (
     <div>
@@ -83,7 +82,7 @@ if (status === "loading" || !session) {
       <div className="lg:mt-12 mt-6 container lg:mb-12 mb-6">
         <h1 className="text-2xl font-medium text-gray-900 mb-6">Recent Orders</h1>
       </div>
-      <RecentOrders restaurantId={session?.user?.restaurantId} />
+      <RecentOrders />
       <QuickAction />
       <LastUpdates />
     </div>

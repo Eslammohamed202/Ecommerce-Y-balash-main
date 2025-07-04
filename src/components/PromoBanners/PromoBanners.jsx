@@ -16,6 +16,8 @@ const PromoBanners = () => {
     const [favorites, setFavorites] = useState([]);
 
     const token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDU0YjFlZmQ3OTIwODE3ZDllYmI5YyIsImlhdCI6MTc0ODg2MDE5NiwiZXhwIjoxNzUxNDUyMTk2fQ.0fkUoakCkGAv4Shtp7Pz2BYkZ87RHB7wb02xOENSLnA";
+    
+    // let token = localStorage.getItem(token)
 
     useEffect(() => {
         fetchFavorites();
@@ -26,6 +28,7 @@ const PromoBanners = () => {
         try {
             const res = await axios.get("https://y-balash.vercel.app/api/favorites", {
                 headers: { Authorization: token }
+
             });
             setFavorites(res.data);
         } catch (error) {

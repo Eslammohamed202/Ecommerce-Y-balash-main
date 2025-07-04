@@ -20,11 +20,15 @@ const Product = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmRiMjhkZjM4ZmZiNjA3YWFkNDcwOCIsImlhdCI6MTc0OTM4NDA3MiwiZXhwIjoxNzUxOTc2MDcyfQ.i3gwhJWDJakeuWXspcVd9POGwU8xnhUmh41_C5oRYyk';
-
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+        if (!token) {
+          throw new Error("No token found in localStorage");
+        }
+
         const response = await fetch('https://y-balash.vercel.app/api/seller/restaurant-products', {
           method: 'GET',
           headers: {
