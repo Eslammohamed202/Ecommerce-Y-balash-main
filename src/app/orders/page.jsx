@@ -1,3 +1,4 @@
+'use client';
 import RecentOrders from '@/components/Home/RecentOrders';
 import Navbar from '@/components/Navbar/Navbar';
 import CustomDropdowns from '@/components/orders/CustomDropdowns';

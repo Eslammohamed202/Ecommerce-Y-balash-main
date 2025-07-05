@@ -5,12 +5,6 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-const TOKEN =
-  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDU0YjFlZmQ3OTIwODE3ZDllYmI5YyIsImlhdCI6MTc0ODg2MDE5NiwiZXhwIjoxNzUxNDUyMTk2fQ.0fkUoakCkGAv4Shtp7Pz2BYkZ87RHB7wb02xOENSLnA";
-
-// ✅ نثبت التوكن على جميع الطلبات
-axios.defaults.headers.common["Authorization"] = TOKEN;
-
 export default function Payment() {
   const [cardNumber, setCardNumber] = useState("");
   const [cvv, setCvv] = useState("");
@@ -27,11 +21,18 @@ export default function Payment() {
     "Algeria",
   ];
 
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
   useEffect(() => {
     const getCartData = async () => {
       try {
         const { data } = await axios.get(
-          "https://y-balash.vercel.app/api/cart"
+          "https://y-balash.vercel.app/api/cart",
+          {
+            headers: {
+              Authorization: token,
+            },
+          }
         );
 
         const items = data.items || [];
@@ -47,8 +48,10 @@ export default function Payment() {
       }
     };
 
-    getCartData();
-  }, []);
+    if (token) {
+      getCartData();
+    }
+  }, [token]);
 
   const handlePayment = async () => {
     const correctCard = "4242424242424242";
@@ -56,13 +59,11 @@ export default function Payment() {
 
     if (cardNumber === correctCard && cvv === correctCvv) {
       try {
-        const amount = Number(totalPrice); // مش بنضرب في 100 عشان الـ backend بيرجع مبلغ زى ما هو
+        const amount = Number(totalPrice);
 
         if (isNaN(amount)) {
           throw new Error("Invalid amount");
         }
-
-        console.log("Sending payment with amount:", amount);
 
         const { data } = await axios.post(
           "https://y-balash.onrender.com/api/purchases/payment",
@@ -74,22 +75,27 @@ export default function Payment() {
           }
         );
 
-        console.log("Payment response:", data);
-
         if (data.clientSecret) {
           Swal.fire("Success", "Payment completed successfully", "success");
 
           try {
-            const cartRes = await axios.get(
-              "https://y-balash.vercel.app/api/cart"
-            );
+            const cartRes = await axios.get("https://y-balash.vercel.app/api/cart", {
+              headers: {
+                Authorization: token,
+              },
+            });
 
             const items = cartRes.data.items || [];
 
             await Promise.all(
               items.map((item) =>
                 axios.delete(
-                  `https://y-balash.vercel.app/api/cart/remove/${item.itemId._id}`
+                  `https://y-balash.vercel.app/api/cart/remove/${item.itemId._id}`,
+                  {
+                    headers: {
+                      Authorization: token,
+                    },
+                  }
                 )
               )
             );
@@ -184,6 +190,6 @@ export default function Payment() {
           Pay Now (EGP {totalPrice})
         </button>
       </div>
-    </div>
-  );
+    </div>
+  );
 }

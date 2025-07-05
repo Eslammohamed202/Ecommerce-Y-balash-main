@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { MdArrowForwardIos } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";

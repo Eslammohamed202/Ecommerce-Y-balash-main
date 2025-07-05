@@ -195,24 +195,28 @@ import { X } from 'lucide-react';
 import axios from 'axios';
 import NavbarHome from '../NavbarHome/NavbarHome';
 
-const TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MDU0YjFlZmQ3OTIwODE3ZDllYmI5YyIsImlhdCI6MTc0ODg2MDE5NiwiZXhwIjoxNzUxNDUyMTk2fQ.0fkUoakCkGAv4Shtp7Pz2BYkZ87RHB7wb02xOENSLnA";
-
-const axiosInstance = axios.create({
-  baseURL: 'https://y-balash.vercel.app/api',
-  headers: {
-    Authorization: TOKEN,
-  },
-});
-
 export default function CartPage() {
   const [cartItems, setCartItems] = useState([]);
+
+  // جلب التوكن الديناميكي من localStorage
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  const axiosInstance = axios.create({
+    baseURL: 'https://y-balash.vercel.app/api',
+    headers: {
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+  });
 
   async function getCartData() {
     try {
       const { data } = await axiosInstance.get('/cart');
-      setCartItems(data.items || []);
+      // فلترة المنتجات اللي عندها itemId موجود
+      const filteredItems = (data.items || []).filter(item => item.itemId);
+      setCartItems(filteredItems);
     } catch (error) {
       console.error('Error fetching cart:', error);
+      toast.error('Failed to fetch cart');
     }
   }
 
@@ -221,15 +225,15 @@ export default function CartPage() {
   }, []);
 
   const handleRemove = async (itemId) => {
-  try {
-    await axiosInstance.delete(`/cart/remove/${itemId}`);
-    toast.success("Item removed from cart");
-    getCartData();
-  } catch (error) {
-    console.error("Error removing item:", error.response?.data || error.message);
-    toast.error("Failed to remove item from cart");
-  }
-};
+    try {
+      await axiosInstance.delete(`/cart/remove/${itemId}`);
+      toast.success("Item removed from cart");
+      getCartData();
+    } catch (error) {
+      console.error("Error removing item:", error.response?.data || error.message);
+      toast.error("Failed to remove item from cart");
+    }
+  };
 
   const handleQuantityChange = async (itemId, currentQty, action) => {
     const newQty = action === 'increase' ? currentQty + 1 : currentQty - 1;
@@ -248,7 +252,7 @@ export default function CartPage() {
   };
 
   const totalPrice = cartItems.reduce((acc, item) => {
-    const priceStr = item.itemId.price || "0";
+    const priceStr = item.itemId?.price || "0";
     const priceNum = parseFloat((priceStr || '').toString().replace(/[^\d.]/g, '')) || 0;
     return acc + priceNum * item.quantity;
   }, 0);
@@ -276,16 +280,18 @@ export default function CartPage() {
                   className="grid grid-cols-5 items-center border-b py-4 text-sm"
                 >
                   <div className="flex items-center gap-2">
-                    <Image
-                      src={item.itemId.imageUrl}
-                      alt={item.itemId.name}
-                      width={50}
-                      height={50}
-                      className="rounded"
-                    />
-                    <span>{item.itemId.name}</span>
+                    {item.itemId?.imageUrl && (
+                      <Image
+                        src={item.itemId.imageUrl}
+                        alt={item.itemId.name}
+                        width={50}
+                        height={50}
+                        className="rounded"
+                      />
+                    )}
+                    <span>{item.itemId?.name || 'Unknown Product'}</span>
                   </div>
-                  <div>{item.itemId.price}</div>
+                  <div>{item.itemId?.price || '0'} EGP</div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
@@ -307,15 +313,14 @@ export default function CartPage() {
                     </button>
                   </div>
                   <div>
-  {(
-    parseFloat((item?.itemId?.price || '').toString().replace(/[^\d.]/g, "")) * (item?.quantity || 0)
-  ).toFixed(2)} EGP
-</div>
-
+                    {(
+                      parseFloat((item?.itemId?.price || '0').toString().replace(/[^\d.]/g, "")) *
+                      (item?.quantity || 0)
+                    ).toFixed(2)} EGP
+                  </div>
                   <div className="flex justify-end">
                     <button
                       onClick={() => handleRemove(item.itemId._id)}
-
                       className="text-red-500 hover:text-red-700"
                     >
                       <div className="w-6 h-6 rounded-full border border-red-500 flex items-center justify-center">
@@ -374,5 +379,7 @@ export default function CartPage() {
     </>
   );
 }
+
+
 
 

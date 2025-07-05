@@ -1,3 +1,4 @@
+'use client';
 import Navbar from '@/components/Navbar/Navbar'
 import Form from '@/components/Withdraw/WithdrawForm'
 import Security from '@/components/Withdraw/Security'

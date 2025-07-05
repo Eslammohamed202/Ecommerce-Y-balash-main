@@ -1,4 +1,5 @@
 // import CustomDropdownsIn from '@/components/inventory/CustomDropDownIn'
+'use client';
 import InventoryHeader from '@/components/inventory/InventoryHeader'
 import InventoryHero from '@/components/inventory/InventoryHero'
 import Product from '@/components/inventory/Product'

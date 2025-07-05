@@ -137,9 +137,9 @@ const Hero = () => {
         <div className="flex items-center justify-between p-2 h-[150px] w-[300px] bg-white rounded-xl">
           <div className="flex flex-col items-start justify-center gap-2 lg:pl-5 pl-2">
             <p className="text-[#6B7280] text-lg font-bold">Total Products</p>
-            {/* <p className="text-black text-xl font-bold">
+            <p className="text-black text-xl font-bold">
               {productsStats?.stats?.totalProducts || 0}
-            </p> */}
+            </p>
             {/* <p className="text-[#FFC433] text-sm font-semibold">
               +{productsStats?.stats?.currentWeekAdditions || 0} New This Week
             </p> */}

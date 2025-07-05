@@ -1,3 +1,4 @@
+'use client';
 import LowHeader from '@/components/Low Stock/LowHeader'
 import LowHero from '@/components/Low Stock/LowHero'
 import LowStockCard from '@/components/Low Stock/LowStockCard'

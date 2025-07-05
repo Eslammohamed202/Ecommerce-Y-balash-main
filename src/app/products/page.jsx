@@ -1,3 +1,4 @@
+'use client';
 import Navbar from '@/components/Navbar/Navbar';
 import Header from '@/components/products/Header';
 import ProductCard from '@/components/products/ProductCard';

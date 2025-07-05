@@ -2,18 +2,16 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { FaRocketchat } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
-import { signOut } from "next-auth/react";
 import { IoCartOutline } from "react-icons/io5";
 import { FaHome, FaStoreAlt, FaRegUser } from "react-icons/fa";
 import { CiHeart } from "react-icons/ci";
 import { BsCart3 } from "react-icons/bs";
 import { FaHeadset } from "react-icons/fa";
-
 
 export default function NavbarHome() {
   const router = useRouter();
@@ -79,7 +77,7 @@ export default function NavbarHome() {
                   <Link href="/client-home">
                     <Image
                       src="/imageBanner.png"
-                      alt="Logo"
+                      alt="imageBanner"
                       width={115}
                       height={115}
                       className="mx-auto block w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48"
@@ -113,12 +111,12 @@ export default function NavbarHome() {
                 </div>
               </div>
             </div>
-            <Link href="/home">
+            <Link href="/client-home">
               <Image
-                src="/logo.png"
-                alt="Logo"
-                width={96}
-                height={96}
+                src="/imageBanner.png"
+                alt="imageBanner"
+                width={115}
+                height={115}
                 className="w-24 h-8 md:w-28 md:h-9 lg:w-32 lg:h-10 object-contain"
               />
             </Link>
@@ -160,12 +158,13 @@ export default function NavbarHome() {
           {/* User Section */}
           <div className="relative flex items-center gap-[1.5rem]">
             <button onClick={toggleUserMenu} className="flex items-center focus:outline-none gap-2">
-<div
-      onClick={() => router.push('/CartPage')}
-      className="cursor-pointer bg-white rounded-full p-3 shadow-md hover:scale-105 transition-transform duration-200"
-    >
-      <IoCartOutline className="text-[#0E554F] w-8 h-8" />
-    </div>              <Image
+              <div
+                onClick={() => router.push('/CartPage')}
+                className="cursor-pointer bg-white rounded-full p-3 shadow-md hover:scale-105 transition-transform duration-200"
+              >
+                <IoCartOutline className="text-[#0E554F] w-8 h-8" />
+              </div>
+              <Image
                 src="/user.jpg"
                 alt="User"
                 width={96}
@@ -178,7 +177,10 @@ export default function NavbarHome() {
             {isUserMenuOpen && (
               <div className="absolute right-0 mt-24 bg-Main rounded-lg shadow-lg py-2 w-36 z-50">
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => {
+                    localStorage.removeItem("token");
+                    router.push("/login");
+                  }}
                   className="block w-full text-left px-4 py-2 text-white transition"
                 >
                   Logout

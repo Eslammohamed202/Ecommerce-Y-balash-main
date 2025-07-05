@@ -53,9 +53,11 @@ export default function BannerHome() {
           <h1 className="font-bold font-inria-sans text-[#F5F6DB] text-3xl leading-[40px]">
             Your favorite shop, <br /> just a doorstep away.
           </h1>
-          <button className="bg-[#F7F2E8] w-[120px] h-[40px] rounded-xl mt-5 text-[#0E554F]">
-            Shop now
-          </button>
+          <Link href="/Favorite">
+            <button className="bg-[#F7F2E8] w-[120px] h-[40px] rounded-xl mt-5 text-[#0E554F]">
+              Shop now
+            </button>
+          </Link>
         </div>
 
         <div className="relative w-[500px] h-[400px] overflow-hidden mx-[120px]">

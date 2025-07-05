@@ -1,3 +1,4 @@
+'use client';
 import Navbar from '@/components/Navbar/Navbar'
 import SalesCharts from '@/components/sales analytics/SalesCharts'
 import SalesHeader from '@/components/sales analytics/SalesHeader'

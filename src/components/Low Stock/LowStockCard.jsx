@@ -1,3 +1,4 @@
+'use client';
 import { BiSolidCategory } from "react-icons/bi";
 
 const products = [
